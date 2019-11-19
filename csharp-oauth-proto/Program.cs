@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 using Flurl.Http;
+using RestSharp;
 
 namespace csharp_oauth_proto
 {
@@ -16,11 +17,11 @@ namespace csharp_oauth_proto
 			}
 
 			// Retrieve command line arguments
-			string clientId = args[1];
-			string clientSecret = args[2];
-			string tenantId = args[3];
-			string redirectURL = args[4];
-			string resourceURL = args[5];
+			string clientId = args[0];
+			string clientSecret = args[1];
+			string tenantId = args[2];
+			string redirectURL = args[3];
+			string resourceURL = args[4];
 
 			// Set OAuth 2.0 URL Endpoints
 			string accessURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/authorize?client_id=" + clientId + "&response_type=code&redirect_uri=" + redirectURL + "&response_mode=query&resource=" + resourceURL;
@@ -40,22 +41,17 @@ namespace csharp_oauth_proto
 			accessCode = Console.ReadLine();
 			System.Console.WriteLine("Thank you!");
 
-			// Construct POST Request to Authorization URL
-			HttpResponseMessage response = authzURL.PostUrlEncodedAsync(new
-			{
-				grant_type = "authorizaton_code",
-				client_id = clientId,
-				code = accessCode,
-				redirect_uri = redirectURL,
-				resource = resourceURL,
-				client_secret = clientSecret,
-			}).Result;
+            // Make POST request to get Access Token
+            var client = new RestClient("https://login.microsoftonline.com/da48fa49-8994-4887-88a8-0a7a4c7886bb/oauth2/token");
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Postman-Token", "5144ba81-d1c1-4c97-aee5-351b8ba20cea");
+            request.AddHeader("cache-control", "no-cache");
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("undefined", "grant_type=authorization_code&client_id="+ clientId + "&code=" + accessCode + "&redirect_uri=" + redirectURL + "&resource=" + resourceURL + "&client_secret=" +  clientSecret, ParameterType.RequestBody);
+            IRestResponse response = client.Execute(request);
 
-			// Make POST Request using cURL
-			accessToken = response.Content.ToString();
-
-			// Print out access token
-			System.Console.WriteLine(accessToken);
+            // Print out access token
+            System.Console.WriteLine(response.Content);
 
 			System.Console.WriteLine("Thank you for authorizing and authenticating!!!");
 			System.Console.ReadLine();
