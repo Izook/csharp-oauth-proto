@@ -42,7 +42,7 @@ namespace csharp_oauth_proto
 			System.Console.WriteLine("Thank you!");
 
             // Make POST request to get Access Token
-            var client = new RestClient("https://login.microsoftonline.com/da48fa49-8994-4887-88a8-0a7a4c7886bb/oauth2/token");
+            var client = new RestClient(authzURL);
             var request = new RestRequest(Method.POST);
             request.AddHeader("Postman-Token", "5144ba81-d1c1-4c97-aee5-351b8ba20cea");
             request.AddHeader("cache-control", "no-cache");
