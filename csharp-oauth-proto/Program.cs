@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net.Http;
-using Flurl.Http;
 using RestSharp;
+using Newtonsoft.Json;
 
 namespace csharp_oauth_proto
 {
@@ -28,8 +27,8 @@ namespace csharp_oauth_proto
 			string authzURL = "https://login.microsoftonline.com/" + tenantId + "/oauth2/token";
 
 			// Access Code
-			string accessCode = "";
-			string accessToken = "";
+			string accessCode;
+			string accessToken;
 
 			// Open ie at Authorization URL
 			ProcessStartInfo info = new ProcessStartInfo(@"C:/Program Files/Internet Explorer/iexplore.exe");
@@ -42,21 +41,45 @@ namespace csharp_oauth_proto
 			System.Console.WriteLine("Thank you!");
 
             // Make POST request to get Access Token
-            var client = new RestClient("https://login.microsoftonline.com/da48fa49-8994-4887-88a8-0a7a4c7886bb/oauth2/token");
+            var client = new RestClient(authzURL);
             var request = new RestRequest(Method.POST);
             request.AddHeader("Postman-Token", "5144ba81-d1c1-4c97-aee5-351b8ba20cea");
             request.AddHeader("cache-control", "no-cache");
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
-            request.AddParameter("undefined", "grant_type=authorization_code&client_id="+ clientId + "&code=" + accessCode + "&redirect_uri=" + redirectURL + "&resource=" + resourceURL + "&client_secret=" +  clientSecret, ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
+			request.AddParameter("grant_type", "authorization_code", ParameterType.GetOrPost);
+			request.AddParameter("client_id", clientId, ParameterType.GetOrPost);
+			request.AddParameter("code", accessCode, ParameterType.GetOrPost);
+			request.AddParameter("redirect_uri", redirectURL, ParameterType.GetOrPost);
+			request.AddParameter("resource", resourceURL, ParameterType.GetOrPost);
+			request.AddParameter("client_secret", clientSecret, ParameterType.GetOrPost);
 
-            // Print out access token
-            System.Console.WriteLine(response.Content);
+			IRestResponse result = client.Execute(request);
 
+			// Deserialize and Parse JSON Response
+			Response response = JsonConvert.DeserializeObject<Response>(result.Content);
+
+			// Print Access and Refresh Token
+			System.Console.WriteLine("Access Token: " + response.access_token);
+			System.Console.WriteLine("Refresh Token: " + response.refresh_token);
+
+			// End Program
 			System.Console.WriteLine("Thank you for authorizing and authenticating!!!");
 			System.Console.ReadLine();
 
 			return;
 		}
+	}
+
+	class Response
+	{
+		public string token_type;
+		public string scope;
+		public string expires_in;
+		public string ext_expires_in;
+		public string expires_on;
+		public string not_before;
+		public string resource;
+		public string access_token;
+		public string refresh_token;
 	}
 }
